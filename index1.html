@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PT Tracker · 課堂追蹤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+HK:wght@300;400;500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1a17; --ink2:#52504a; --ink3:#8a877f;
+    --bg:#f4f1ea; --surface:#ffffff; --line:#e4e0d6;
+    --accent:#c2613a; --accent-soft:#f6e7df;
+    --green:#2f7d5b; --green-soft:#e2f0e9;
+    --warn:#b8841c; --warn-soft:#f8eed6;
+    --red:#b1402f;
+    --num:'Space Grotesk', sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'Noto Sans HK',sans-serif;background:var(--bg);color:var(--ink);
+    line-height:1.6;font-weight:400;-webkit-font-smoothing:antialiased;padding-bottom:90px;}
+  .wrap{max-width:560px;margin:0 auto;padding:0 16px;}
+  .num{font-family:var(--num);}
+
+  #login{min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px;}
+  #login .logo{font-family:var(--num);font-weight:700;font-size:13px;letter-spacing:3px;color:var(--accent);text-transform:uppercase;margin-bottom:12px;}
+  #login h1{font-size:28px;font-weight:700;margin-bottom:6px;}
+  #login p{color:var(--ink2);margin-bottom:28px;text-align:center;font-size:14px;}
+  .card-login{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:28px;width:100%;max-width:380px;}
+
+  header{background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50;}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;}
+  header .brand{font-family:var(--num);font-weight:700;font-size:15px;letter-spacing:1px;}
+  header .brand span{color:var(--accent);}
+  .iconbtn{background:none;border:none;color:var(--ink3);font-size:20px;cursor:pointer;padding:6px;line-height:1;}
+
+  label.lbl{display:block;font-size:12px;color:var(--ink2);margin-bottom:6px;font-weight:500;}
+  input,select{width:100%;font-family:inherit;font-size:16px;color:var(--ink);
+    background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:14px;outline:none;transition:border .15s;}
+  input:focus,select:focus{border-color:var(--accent);}
+  .btn{width:100%;font-family:inherit;font-size:16px;font-weight:500;cursor:pointer;border:none;
+    border-radius:12px;padding:15px;transition:transform .08s,opacity .15s;}
+  .btn:active{transform:scale(.985);}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink2);}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:18px;margin-bottom:14px;}
+  .row{display:flex;align-items:center;justify-content:space-between;}
+  .pill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:999px;}
+  .pill.ok{background:var(--green-soft);color:var(--green);}
+  .pill.low{background:var(--warn-soft);color:var(--warn);}
+  .pill.done{background:#eee;color:var(--ink3);}
+
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+  .stat{background:var(--bg);border-radius:12px;padding:10px;text-align:center;}
+  .stat .l{font-size:11px;color:var(--ink3);}
+  .stat .v{font-family:var(--num);font-size:22px;font-weight:700;margin-top:2px;}
+
+  .bar{height:6px;background:var(--bg);border-radius:999px;overflow:hidden;margin:4px 0 14px;}
+  .bar>i{display:block;height:100%;background:var(--accent);}
+
+  .predict{background:var(--accent-soft);border-radius:12px;padding:12px 14px;margin-bottom:14px;}
+  .predict .l{font-size:12px;color:var(--accent);font-weight:500;}
+  .predict .v{font-size:16px;font-weight:500;margin-top:1px;}
+  .predict .s{font-size:12px;color:var(--ink2);margin-top:2px;}
+
+  .sess{font-size:13px;color:var(--ink2);padding:6px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;}
+  .sess:first-of-type{border-top:none;}
+
+  .links{display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;}
+  .links button{background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:inherit;}
+  .links button.del{color:var(--red);}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+  .chip{font-size:14px;padding:9px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);cursor:pointer;transition:all .12s;}
+  .chip.sel{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .clientrow{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;padding:15px 18px;margin-bottom:10px;cursor:pointer;transition:transform .08s;}
+  .clientrow:active{transform:scale(.99);}
+  .clientrow .nm{font-size:16px;font-weight:500;}
+  .clientrow .sub{font-size:12px;color:var(--ink3);margin-top:2px;}
+  .clientrow .rt{text-align:right;}
+  .clientrow .rt .big{font-family:var(--num);font-size:20px;font-weight:700;}
+  .clientrow .rt .lb{font-size:11px;color:var(--ink3);}
+
+  .back{background:none;border:none;color:var(--accent);font-size:14px;cursor:pointer;padding:0;margin-bottom:14px;font-family:inherit;}
+
+  .pnl{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+  .pnl .box{background:var(--bg);border-radius:12px;padding:14px;}
+  .pnl .box.full{grid-column:1/-1;background:var(--ink);color:#fff;}
+  .pnl .l{font-size:12px;opacity:.7;}
+  .pnl .v{font-family:var(--num);font-size:24px;font-weight:700;margin-top:3px;}
+  .flow{font-size:13px;padding:8px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;}
+
+  .seg{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:14px;gap:4px;}
+  .seg button{flex:1;background:none;border:none;font-family:inherit;font-size:14px;padding:9px;border-radius:9px;color:var(--ink2);cursor:pointer;}
+  .seg button.on{background:var(--surface);color:var(--ink);font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.06);}
+
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal .dow{text-align:center;font-size:11px;color:var(--ink3);padding:4px 0;}
+  .cal .day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-family:var(--num);font-size:14px;background:var(--bg);color:var(--ink2);cursor:pointer;position:relative;border:1px solid transparent;}
+  .cal .day.empty{background:transparent;cursor:default;}
+  .cal .day.has{background:var(--accent-soft);color:var(--accent);font-weight:700;border-color:var(--accent);}
+  .cal .day.today{outline:2px solid var(--ink);}
+  .cal .day .dot{font-size:9px;margin-top:1px;}
+  .cal .day.sel{background:var(--ink);color:#fff;}
+
+  nav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--line);z-index:50;}
+  nav .wrap{display:flex;height:70px;}
+  nav button{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    color:var(--ink3);font-family:inherit;font-size:11px;cursor:pointer;}
+  nav button.active{color:var(--accent);}
+  nav button svg{width:23px;height:23px;}
+
+  .empty{text-align:center;color:var(--ink3);padding:50px 20px;font-size:14px;}
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+    padding:11px 20px;border-radius:999px;font-size:14px;z-index:99;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .muted{color:var(--ink3);font-size:13px;}
+  h2.sec{font-size:13px;font-weight:500;color:var(--ink3);text-transform:uppercase;letter-spacing:1px;margin:6px 0 12px;}
+  .month-pick{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+  .month-pick button{background:none;border:1px solid var(--line);border-radius:10px;width:38px;height:38px;font-size:18px;cursor:pointer;color:var(--ink2);}
+  .month-pick .m{font-family:var(--num);font-weight:700;font-size:18px;}
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="logo">PT TRACKER</div>
+  <h1>課堂追蹤系統</h1>
+  <p>輸入你嘅電郵，會收到一條登入連結。<br>同一個電郵手機電腦都登到，資料自動同步。</p>
+  <div class="card-login">
+    <label class="lbl">電郵地址</label>
+    <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+    <button class="btn btn-accent" id="send-link">傳送登入連結</button>
+    <p id="login-msg" style="margin-top:14px;margin-bottom:0;display:none;"></p>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <header><div class="wrap">
+    <div class="brand">PT<span>·</span>TRACKER</div>
+    <button class="iconbtn" id="logout" title="登出">⎋</button>
+  </div></header>
+
+  <main class="wrap" style="padding-top:18px;">
+    <div id="view-log"></div>
+    <div id="view-clients" style="display:none;"></div>
+    <div id="view-profile" style="display:none;"></div>
+    <div id="view-month" style="display:none;"></div>
+    <div id="view-settings" style="display:none;"></div>
+  </main>
+
+  <nav><div class="wrap">
+    <button data-tab="log" class="active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>落堂</button>
+    <button data-tab="clients">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3 3-5 6-5s6 2 6 5"/><path d="M16 6a3 3 0 010 6"/><path d="M21 20c0-2-1-3.5-3-4.5"/></svg>客戶</button>
+    <button data-tab="month">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>月結</button>
+    <button data-tab="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>設定</button>
+  </div></nav>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script>
+(function(){
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const $ = s => document.querySelector(s);
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  const toast = m => { const t=$('#toast'); t.textContent=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),1800); };
+  const todayISO = () => new Date().toISOString().slice(0,10);
+  const DOW = ['一','二','三','四','五','六','日'];
+
+  let state = { clients:[], sessions:[], settings:{alive_monthly:4000, rate_111:80}, locations:['ALIVE','111','Clubhouse'] };
+  let monthCursor = new Date();
+  let weekCursor = mondayOf(new Date());
+  let monthMode = 'month';
+  let openProfile = null;
+  let selDay = null;
+
+  function mondayOf(d){ const x=new Date(d); const day=(x.getDay()+6)%7; x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x; }
+  function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+  function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  // 第幾週: 跟日曆週(週一起), 由 first_date 嗰週做第 1 週
+  function weekNo(firstDate, onDate){
+    if(!firstDate) return null;
+    const a=mondayOf(new Date(firstDate)), b=mondayOf(new Date(onDate));
+    return Math.floor((b-a)/(7*864e5))+1;
+  }
+
+  $('#send-link').onclick = async () => {
+    const email = $('#email').value.trim();
+    if(!email){ toast('請輸入電郵'); return; }
+    const msg = $('#login-msg'); msg.style.display='block'; msg.textContent='傳送緊…';
+    const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: window.location.href }});
+    msg.textContent = error ? ('出錯：'+error.message) : '✓ 已傳送！請去電郵撳個連結登入。';
+    msg.style.color = error ? 'var(--red)' : 'var(--green)';
+  };
+  $('#logout').onclick = async () => { await sb.auth.signOut(); location.reload(); };
+
+  sb.auth.onAuthStateChange((_e, session) => { if(session) boot(); });
+  sb.auth.getSession().then(({data})=>{ if(data.session) boot(); });
+
+  async function boot(){
+    $('#login').style.display='none'; $('#app').style.display='block';
+    await loadAll(); render(); setTab('log');
+  }
+  async function loadAll(){
+    const u = (await sb.auth.getUser()).data.user.id;
+    let { data:st } = await sb.from('settings').select('*').eq('user_id',u).maybeSingle();
+    if(!st){ await sb.from('settings').insert({user_id:u}); st={alive_monthly:4000,rate_111:80}; }
+    state.settings = { alive_monthly:Number(st.alive_monthly), rate_111:Number(st.rate_111) };
+    state.clients  = (await sb.from('clients').select('*').order('created_at')).data || [];
+    state.sessions = (await sb.from('sessions').select('*').order('session_date',{ascending:false})).data || [];
+    const locs = [...new Set(state.sessions.map(s=>s.location))];
+    state.locations = [...new Set(['ALIVE','111','Clubhouse',...locs])];
+  }
+  const uid = async () => (await sb.auth.getUser()).data.user.id;
+  const costFor = loc => loc==='111' ? state.settings.rate_111 : 0;
+  const sessOf = cid => state.sessions.filter(s=>s.client_id===cid);
+
+  async function addClient(name,total,price,firstDate){
+    await sb.from('clients').insert({ user_id:await uid(), name, total_sessions:total, remaining:total, package_price:price, first_date:firstDate||null });
+    await loadAll(); render(); toast('已新增 '+name); setTab('clients');
+  }
+  async function logSession(cid,date,loc){
+    const c = state.clients.find(x=>x.id===cid);
+    if(!c){ toast('搵唔到客戶'); return; }
+    if(c.remaining<=0){ toast(c.name+' 已冇剩堂'); return; }
+    const rev = c.total_sessions>0 ? c.package_price/c.total_sessions : 0;
+    await sb.from('sessions').insert({ user_id:await uid(), client_id:cid, client_name:c.name,
+      session_date:date, location:loc, cost:costFor(loc), revenue:rev });
+    let patch = { remaining:c.remaining-1 };
+    if(!c.first_date) patch.first_date = date;
+    await sb.from('clients').update(patch).eq('id',cid);
+    await loadAll(); render(); toast('已記錄 · '+c.name); setTab('clients');
+  }
+  async function undoLast(cid){
+    const last = sessOf(cid).sort((a,b)=> (a.session_date<b.session_date?1:-1) || (a.created_at<b.created_at?1:-1))[0];
+    if(!last) return;
+    const c = state.clients.find(x=>x.id===cid);
+    await sb.from('sessions').delete().eq('id',last.id);
+    await sb.from('clients').update({ remaining:c.remaining+1 }).eq('id',cid);
+    await loadAll(); render(); toast('已撤銷上一堂');
+  }
+  async function addPackage(cid,n,price){
+    const c = state.clients.find(x=>x.id===cid);
+    await sb.from('clients').update({ total_sessions:c.total_sessions+n, remaining:c.remaining+n,
+      package_price:Number(c.package_price)+price }).eq('id',cid);
+    await loadAll(); render(); toast('已加 '+n+' 堂');
+  }
+  async function delClient(cid){
+    if(!confirm('確定刪除？佢嘅上堂紀錄都會一齊刪。')) return;
+    await sb.from('clients').delete().eq('id',cid);
+    openProfile=null; await loadAll(); render(); setTab('clients');
+  }
+  async function editClient(cid,name,remaining,total,price,firstDate){
+    await sb.from('clients').update({ name, remaining, total_sessions:total, package_price:price, first_date:firstDate||null }).eq('id',cid);
+    await loadAll(); render(); toast('已更新 '+name);
+  }
+  async function saveSettings(alive,rate){
+    await sb.from('settings').update({ alive_monthly:alive, rate_111:rate, updated_at:new Date().toISOString() }).eq('user_id',await uid());
+    state.settings={alive_monthly:alive,rate_111:rate}; toast('設定已儲存');
+  }
+
+  function predict(c){
+    if(c.remaining<=0) return {v:'已用完',s:''};
+    const ss = sessOf(c.id).map(s=>s.session_date).sort();
+    if(ss.length<2) return {v:'需更多紀錄',s:'上多 1-2 堂後可預測'};
+    const first=new Date(ss[0]), last=new Date(ss[ss.length-1]);
+    const days=Math.max(1,(last-first)/864e5);
+    const perDay=(ss.length-1)/days;
+    if(perDay<=0) return {v:'需更多紀錄',s:''};
+    const daysLeft=Math.round(c.remaining/perDay);
+    const end=new Date(last.getTime()+daysLeft*864e5);
+    return { v:'約 '+(end.getMonth()+1)+'月'+end.getDate()+'日',
+             s:'平均每週 '+(perDay*7).toFixed(1)+' 堂 · 約 '+daysLeft+' 日後' };
+  }
+
+  function renderLog(){
+    const v=$('#view-log');
+    if(!state.clients.length){ v.innerHTML='<div class="empty">未有客戶。<br>去「設定」分頁加返一個先。</div>'; return; }
+    const opts=state.clients.map(c=>`<option value="${c.id}">${c.name}（剩 ${c.remaining} 堂）</option>`).join('');
+    const chips=state.locations.map(l=>`<span class="chip" data-loc="${l}">${l}</span>`).join('');
+    v.innerHTML=`<h2 class="sec">記錄一堂</h2>
+      <div class="card">
+        <label class="lbl">客戶</label><select id="lg-c">${opts}</select>
+        <label class="lbl">日期</label><input type="date" id="lg-d" value="${todayISO()}">
+        <label class="lbl">地點</label><div class="chips" id="lg-chips">${chips}</div>
+        <input type="text" id="lg-loc" placeholder="或自行輸入地點">
+        <button class="btn btn-accent" id="lg-go">記錄呢一堂（扣 1 堂）</button>
+      </div>
+      <p class="muted">111 每堂自動計成本 ${fmt(state.settings.rate_111)}；其餘地點 $0。ALIVE 月租喺月結度逐月計。</p>`;
+    let sel='';
+    v.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
+      v.querySelectorAll('.chip').forEach(x=>x.classList.remove('sel'));
+      ch.classList.add('sel'); sel=ch.dataset.loc; $('#lg-loc').value='';
+    });
+    $('#lg-go').onclick=()=>{
+      const cid=$('#lg-c').value, date=$('#lg-d').value, loc=$('#lg-loc').value.trim()||sel;
+      if(!date){toast('請揀日期');return;}
+      if(!loc){toast('請揀或輸入地點');return;}
+      logSession(cid,date,loc);
+    };
+  }
+
+  function renderClients(){
+    const v=$('#view-clients');
+    if(!state.clients.length){ v.innerHTML='<div class="empty">未有客戶。</div>'; return; }
+    v.innerHTML='<h2 class="sec">客戶</h2>'+state.clients.map(c=>{
+      const used=c.total_sessions-c.remaining;
+      const wk=c.first_date?weekNo(c.first_date,todayISO()):null;
+      const sub = (c.first_date? ('第 '+wk+' 週 · ') : '') + '累積 '+used+' 堂';
+      const low=c.remaining<=2&&c.remaining>0, done=c.remaining<=0;
+      const dotc = done?'var(--ink3)':low?'var(--warn)':'var(--green)';
+      return `<div class="clientrow" data-open="${c.id}">
+        <div><div class="nm">${c.name}</div><div class="sub">${sub}</div></div>
+        <div class="rt"><div class="big" style="color:${dotc}">${c.remaining}</div><div class="lb">剩餘堂數</div></div>
+      </div>`;
+    }).join('');
+    v.querySelectorAll('[data-open]').forEach(r=>r.onclick=()=>{ openProfile=r.dataset.open; render(); setTab('profile'); });
+  }
+
+  function renderProfile(){
+    const v=$('#view-profile');
+    const c=state.clients.find(x=>x.id===openProfile);
+    if(!c){ v.innerHTML='<button class="back" data-back>‹ 返回</button><div class="empty">客戶唔存在</div>';
+      v.querySelector('[data-back]').onclick=()=>setTab('clients'); return; }
+    const p=predict(c), used=c.total_sessions-c.remaining, pct=c.total_sessions?Math.round(used/c.total_sessions*100):0;
+    const low=c.remaining<=2&&c.remaining>0, done=c.remaining<=0;
+    const wk=c.first_date?weekNo(c.first_date,todayISO()):null;
+    const all=sessOf(c.id).sort((a,b)=>a.session_date<b.session_date?1:-1);
+    const list=all.map(s=>{
+      const w=c.first_date?weekNo(c.first_date,s.session_date):null;
+      return `<div class="sess"><span>${s.session_date.replace(/-/g,'/')} · ${s.location}${w?(' · 第'+w+'週'):''}</span><span class="num">${fmt(s.revenue)}</span></div>`;
+    }).join('') || '<div class="muted" style="padding:4px 0;">未有上堂紀錄</div>';
+    v.innerHTML=`<button class="back" data-back>‹ 返回客戶列表</button>
+      <div class="card">
+        <div class="row" style="margin-bottom:4px;">
+          <span style="font-size:20px;font-weight:700;">${c.name}</span>
+          <span class="pill ${done?'done':low?'low':'ok'}">${done?'已用完':low?'快用完':'進行中'}</span>
+        </div>
+        <div class="muted" style="margin-bottom:10px;">
+          ${c.first_date? ('第一堂 '+c.first_date.replace(/-/g,'/')+' · 目前第 '+wk+' 週') : '未設第一堂日期（喺下面編輯補返）'}
+        </div>
+        <div class="stats">
+          <div class="stat"><div class="l">剩餘</div><div class="v">${c.remaining}</div></div>
+          <div class="stat"><div class="l">累積上堂</div><div class="v">${used}</div></div>
+          <div class="stat"><div class="l">總堂</div><div class="v">${c.total_sessions}</div></div>
+        </div>
+        <div class="bar"><i style="width:${pct}%"></i></div>
+        <div class="predict"><div class="l">預計用完</div><div class="v">${p.v}</div>${p.s?`<div class="s">${p.s}</div>`:''}</div>
+        <div class="links">
+          <button data-act="edit">✎ 編輯</button>
+          <button data-act="add">+ 加堂</button>
+          <button data-act="undo">↩ 撤銷上一堂</button>
+          <button class="del" data-act="del">刪除</button>
+        </div>
+        <div id="editbox" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);">
+          <label class="lbl">客戶名字</label><input type="text" id="e-n" value="${c.name}">
+          <label class="lbl">第一堂日期</label><input type="date" id="e-f" value="${c.first_date||''}">
+          <label class="lbl">剩餘堂數</label><input type="number" id="e-r" value="${c.remaining}" inputmode="numeric">
+          <label class="lbl">套票總堂數</label><input type="number" id="e-t" value="${c.total_sessions}" inputmode="numeric">
+          <label class="lbl">套票售價（$）</label><input type="number" id="e-p" value="${c.package_price}" inputmode="numeric">
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary" data-act="save" style="flex:1;">儲存</button>
+            <button class="btn btn-ghost" data-act="cancel" style="flex:1;">取消</button>
+          </div>
+        </div>
+      </div>
+      <h2 class="sec">上堂紀錄（${all.length} 堂）</h2>
+      <div class="card">${list}</div>`;
+    v.querySelector('[data-back]').onclick=()=>setTab('clients');
+    v.querySelectorAll('button[data-act]').forEach(b=>b.onclick=()=>{
+      const act=b.dataset.act, id=c.id;
+      if(act==='undo') undoLast(id);
+      else if(act==='del') delClient(id);
+      else if(act==='edit'){ const e=$('#editbox'); e.style.display=e.style.display==='none'?'block':'none'; }
+      else if(act==='cancel'){ $('#editbox').style.display='none'; }
+      else if(act==='save'){
+        const name=$('#e-n').value.trim(), fd=$('#e-f').value||null;
+        const rem=parseInt($('#e-r').value,10), tot=parseInt($('#e-t').value,10), price=parseFloat($('#e-p').value)||0;
+        if(!name){toast('請輸入名字');return;}
+        if(isNaN(rem)||rem<0){toast('剩餘堂數唔啱');return;}
+        if(isNaN(tot)||tot<1){toast('總堂數唔啱');return;}
+        if(rem>tot){toast('剩餘唔可以多過總堂數');return;}
+        editClient(id,name,rem,tot,price,fd);
+      }
+      else if(act==='add'){
+        const n=parseInt(prompt('加幾多堂？'),10); if(!n||n<1) return;
+        const price=parseFloat(prompt('呢張新套票售價？（$）'))||0; addPackage(id,n,price);
+      }
+    });
+  }
+
+  function pnlFor(list){
+    const rev=list.reduce((a,s)=>a+Number(s.revenue),0);
+    const varCost=list.reduce((a,s)=>a+Number(s.cost),0);
+    const c111=list.filter(s=>s.location==='111').length;
+    const byClient={}; list.forEach(s=>{ byClient[s.client_name]=byClient[s.client_name]||{n:0,r:0}; byClient[s.client_name].n++; byClient[s.client_name].r+=Number(s.revenue); });
+    const byLoc={}; list.forEach(s=>{ byLoc[s.location]=(byLoc[s.location]||0)+1; });
+    return {rev,varCost,c111,byClient,byLoc,count:list.length};
+  }
+  function pnlCard(d, fixed){
+    const net=d.rev-d.varCost-fixed;
+    const flowC=Object.entries(d.byClient).map(([n,o])=>`<div class="flow"><span>${n} · ${o.n} 堂</span><span class="num" style="color:var(--green)">${fmt(o.r)}</span></div>`).join('')||'<div class="muted" style="padding:8px 0;">未有上堂紀錄</div>';
+    const flowL=Object.entries(d.byLoc).map(([l,n])=>`<div class="flow"><span>${l} · ${n} 堂</span><span class="num" style="color:${l==='111'?'var(--red)':'var(--ink3)'}">${l==='111'?'-'+fmt(n*state.settings.rate_111):'$0'}</span></div>`).join('')||'<div class="muted">—</div>';
+    return `<div class="card">
+        <div class="pnl">
+          <div class="box"><div class="l">總收入</div><div class="v" style="color:var(--green)">${fmt(d.rev)}</div></div>
+          <div class="box"><div class="l">總成本</div><div class="v" style="color:var(--red)">${fmt(d.varCost+fixed)}</div></div>
+          <div class="box full"><div class="l">淨收入（扣除成本後）</div><div class="v">${fmt(net)}</div></div>
+        </div>
+        <div style="font-size:13px;color:var(--ink2);margin-top:4px;">
+          <div class="flow"><span>共上堂數</span><span class="num">${d.count} 堂</span></div>
+          ${fixed?`<div class="flow"><span>ALIVE 固定租金</span><span class="num" style="color:var(--red)">-${fmt(fixed)}</span></div>`:''}
+          <div class="flow"><span>111 場租（${d.c111} 堂）</span><span class="num" style="color:var(--red)">-${fmt(d.c111*state.settings.rate_111)}</span></div>
+        </div>
+      </div>
+      <h2 class="sec">收入流水（按客戶）</h2><div class="card">${flowC}</div>
+      <h2 class="sec">場地使用</h2><div class="card">${flowL}</div>`;
+  }
+
+  function renderMonth(){
+    const v=$('#view-month');
+    const seg=`<div class="seg">
+      <button data-mode="month" class="${monthMode==='month'?'on':''}">月</button>
+      <button data-mode="week" class="${monthMode==='week'?'on':''}">週</button>
+      <button data-mode="cal" class="${monthMode==='cal'?'on':''}">日曆</button>
+    </div>`;
+    let body='';
+    if(monthMode==='month'){
+      const y=monthCursor.getFullYear(), m=monthCursor.getMonth();
+      const inM=state.sessions.filter(s=>{const d=new Date(s.session_date);return d.getFullYear()===y&&d.getMonth()===m;});
+      body=`<div class="month-pick"><button id="pv">‹</button><span class="m">${y} 年 ${m+1} 月</span><button id="nx">›</button></div>`
+        + pnlCard(pnlFor(inM), state.settings.alive_monthly);
+    } else if(monthMode==='week'){
+      const ws=weekCursor, we=addDays(ws,6);
+      const inW=state.sessions.filter(s=>{const d=new Date(s.session_date+'T00:00:00');return d>=ws&&d<=we;});
+      const fixedWk=Math.round(state.settings.alive_monthly/4.345);
+      const label=`${ws.getMonth()+1}/${ws.getDate()} – ${we.getMonth()+1}/${we.getDate()}`;
+      const perDay=DOW.map((nm,i)=>{ const dd=iso(addDays(ws,i)); const n=inW.filter(s=>s.session_date===dd).length;
+        return `<div class="flow"><span>星期${nm} ${addDays(ws,i).getMonth()+1}/${addDays(ws,i).getDate()}</span><span class="num">${n? n+' 堂':'—'}</span></div>`; }).join('');
+      body=`<div class="month-pick"><button id="pv">‹</button><span class="m">${label}</span><button id="nx">›</button></div>`
+        + pnlCard(pnlFor(inW), fixedWk)
+        + `<h2 class="sec">每日分佈</h2><div class="card">${perDay}</div>`
+        + `<p class="muted">週成本嘅 ALIVE 部分用月租 ÷ 4.345 估算（${fmt(fixedWk)}/週）。</p>`;
+    } else {
+      const y=monthCursor.getFullYear(), m=monthCursor.getMonth();
+      const first=new Date(y,m,1), startDow=(first.getDay()+6)%7, dim=new Date(y,m+1,0).getDate();
+      const counts={}; state.sessions.forEach(s=>{const d=new Date(s.session_date);if(d.getFullYear()===y&&d.getMonth()===m)counts[d.getDate()]=(counts[d.getDate()]||0)+1;});
+      let cells=DOW.map(d=>`<div class="dow">${d}</div>`).join('');
+      for(let i=0;i<startDow;i++) cells+='<div class="day empty"></div>';
+      const todayD=(new Date().getFullYear()===y&&new Date().getMonth()===m)?new Date().getDate():-1;
+      for(let d=1;d<=dim;d++){ const dd=iso(new Date(y,m,d)); const n=counts[d]||0;
+        const cls=['day']; if(n>0)cls.push('has'); if(d===todayD)cls.push('today'); if(selDay===dd)cls.push('sel');
+        cells+=`<div class="${cls.join(' ')}" data-day="${dd}">${d}${n>0?`<span class="dot">${n}堂</span>`:''}</div>`; }
+      body=`<div class="month-pick"><button id="pv">‹</button><span class="m">${y} 年 ${m+1} 月</span><button id="nx">›</button></div>`
+        + `<div class="card"><div class="cal">${cells}</div></div><div id="daydetail"></div>`;
+    }
+    v.innerHTML=seg+body;
+    v.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{ monthMode=b.dataset.mode; selDay=null; renderMonth(); });
+    const pv=$('#pv'), nx=$('#nx');
+    if(pv) pv.onclick=()=>{ if(monthMode==='week'){weekCursor=addDays(weekCursor,-7);} else {monthCursor.setMonth(monthCursor.getMonth()-1);} renderMonth(); };
+    if(nx) nx.onclick=()=>{ if(monthMode==='week'){weekCursor=addDays(weekCursor,7);} else {monthCursor.setMonth(monthCursor.getMonth()+1);} renderMonth(); };
+    if(monthMode==='cal'){
+      v.querySelectorAll('[data-day]').forEach(el=>el.onclick=()=>{ selDay=el.dataset.day; renderMonth(); renderDayDetail(); });
+      renderDayDetail();
+    }
+  }
+  function renderDayDetail(){
+    const box=$('#daydetail'); if(!box) return;
+    if(!selDay){ box.innerHTML=''; return; }
+    const list=state.sessions.filter(s=>s.session_date===selDay);
+    const rows=list.map(s=>`<div class="sess"><span>${s.client_name} · ${s.location}</span><span class="num">${fmt(s.revenue)}</span></div>`).join('')
+      || '<div class="muted" style="padding:4px 0;">嗰日冇上堂</div>';
+    box.innerHTML=`<h2 class="sec">${selDay.replace(/-/g,'/')}（${list.length} 堂）</h2><div class="card">${rows}</div>`;
+  }
+
+  function renderSettings(){
+    const v=$('#view-settings');
+    v.innerHTML=`<h2 class="sec">新增客戶</h2>
+      <div class="card">
+        <label class="lbl">客戶名字</label><input type="text" id="ad-n" placeholder="例如：Kelsey">
+        <label class="lbl">第一堂日期</label><input type="date" id="ad-f" value="${todayISO()}">
+        <label class="lbl">套票堂數</label><input type="number" id="ad-t" placeholder="例如：10" inputmode="numeric">
+        <label class="lbl">套票售價（$）</label><input type="number" id="ad-p" placeholder="例如：5000" inputmode="numeric">
+        <button class="btn btn-primary" id="ad-go">新增客戶</button>
+      </div>
+      <h2 class="sec">成本設定</h2>
+      <div class="card">
+        <label class="lbl">ALIVE 每月固定租金（$）</label><input type="number" id="se-a" value="${state.settings.alive_monthly}" inputmode="numeric">
+        <label class="lbl">111 每堂場租（$，1 鐘）</label><input type="number" id="se-r" value="${state.settings.rate_111}" inputmode="numeric">
+        <button class="btn btn-ghost" id="se-go">儲存設定</button>
+        <p class="muted" style="margin-top:10px;">ALIVE = $12,000 / 3 個月 = $4,000/月。改咗只影響之後嘅月結計算。</p>
+      </div>`;
+    $('#ad-go').onclick=()=>{
+      const n=$('#ad-n').value.trim(), fd=$('#ad-f').value||null, t=parseInt($('#ad-t').value,10), p=parseFloat($('#ad-p').value)||0;
+      if(!n){toast('請輸入名字');return;}
+      if(!t||t<1){toast('請輸入堂數');return;}
+      addClient(n,t,p,fd);
+    };
+    $('#se-go').onclick=()=>saveSettings(parseFloat($('#se-a').value)||0, parseFloat($('#se-r').value)||0);
+  }
+
+  function render(){ renderLog(); renderClients(); renderProfile(); renderMonth(); renderSettings(); }
+
+  function setTab(name){
+    ['log','clients','profile','month','settings'].forEach(t=>{ $('#view-'+t).style.display=t===name?'block':'none'; });
+    const navName = name==='profile' ? 'clients' : name;
+    document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('active', b.dataset.tab===navName));
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+})();
+</script>
+</body>
+</html>
